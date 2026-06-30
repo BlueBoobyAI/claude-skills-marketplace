@@ -49,6 +49,15 @@
       "author": {
         "name": "Sigil Project"
       }
+    },
+    {
+      "name": "360-review-skills",
+      "source": "./360-review-plugin",
+      "description": "Multi-perspective 360 review that generates 100 balanced user stories (50 positive, 50 negative) across 5 expert lenses. Applies to any codebase, skill, design doc, or idea. Every claim has evidence markers.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sigil Project"
+      }
     }
   ]
 }
