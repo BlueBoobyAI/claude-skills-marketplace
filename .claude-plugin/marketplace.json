@@ -40,6 +40,16 @@
       "author": {
         "name": "mhattingpete"
       }
+    },
+    {
+      "name": "omniscient-parliament",
+      "source": "./omniscient-parliament-plugin",
+      "description": "Multi-perspective review engine. Spawns parallel expert agents (Engineering, Security, UX, CEO/Strategy, QA) to audit any codebase, design doc, or skill. The quality gate for AI skills marketplaces.",
+      "version": "0.1.1",
+      "author": {
+        "name": "Charles Liuson",
+        "email": "blueboobyai@gmail.com"
+      }
     }
   ]
 }
