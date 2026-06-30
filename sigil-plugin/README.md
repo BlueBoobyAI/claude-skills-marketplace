@@ -14,6 +14,8 @@ The quality gate for AI skills marketplaces. Only Sigil-certified skills may lis
 - **Citation discipline** — Every finding marked ✅ (verified), ⚠️ (plausible), or ❌ (cannot verify)
 - **Adversarial verify pass** — Findings are challenged before reporting
 - **90-day validity** — Skills re-certified after version bumps
+- **readme-doctor skill** — 6-step README audit + rewrite pipeline with domain detection
+- **reddit-research skill** — Multi-subreddit research engine using Reddit MCP (never WebFetch)
 
 ## Usage
 
@@ -38,8 +40,8 @@ These plugins pass the Sigil 5-panel certification process:
 
 | Plugin | What it does |
 |--------|-------------|
-| **[sigil-engineering-workflow](../sigil-engineering-workflow-plugin/README.md)** v1.0.0 | 5 engineering skills: plan-execute, test-doctor, safe-commit, review-apply, solution-ensemble. Security-gated, language-agnostic, self-testing. |
 | **[360-review](../360-review-plugin/)** v1.0.0 | Generates 100 structured user stories (50 positive, 50 negative) across 5 expert lenses with evidence markers. Used internally by Sigil for all certifications. |
+| **[reddit-research](skills/reddit-research/SKILL.md)** | Multi-subreddit research engine using Reddit MCP tools. Never falls back to WebFetch for Reddit URLs. |
 
 ## Also available on AEO Sky
 

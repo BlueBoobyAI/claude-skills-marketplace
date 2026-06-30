@@ -210,3 +210,7 @@ Generate a `sigil-certificate.json` file with the full certificate:
 ## Reference
 
 See `agents/` for the full sub-agent definitions. See `docs/certificate.schema.json` for the certificate schema.
+
+### Companion Skills (in this plugin)
+- **readme-doctor** (`skills/readme-doctor/SKILL.md`) — 6-step README audit + rewrite pipeline with domain detection. Use for documentation and marketing copy review.
+- **reddit-research** (`skills/reddit-research/SKILL.md`) — Multi-subreddit research engine using Reddit MCP tools. Use for market research, competitor analysis, and sentiment gathering.

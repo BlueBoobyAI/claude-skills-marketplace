@@ -42,7 +42,8 @@ check 2 "All SKILL.md files exist" test -f "$PLUGIN_DIR/skills/plan-execute/SKIL
   -a -f "$PLUGIN_DIR/skills/test-doctor/SKILL.md" \
   -a -f "$PLUGIN_DIR/skills/safe-commit/SKILL.md" \
   -a -f "$PLUGIN_DIR/skills/review-apply/SKILL.md" \
-  -a -f "$PLUGIN_DIR/skills/solution-ensemble/SKILL.md"
+  -a -f "$PLUGIN_DIR/skills/solution-ensemble/SKILL.md" \
+  -a -f "$PLUGIN_DIR/skills/reddit-research/SKILL.md"
 
 # CHECK 3: All AGENT.md files exist
 check 3 "All AGENT.md files exist" test -f "$PLUGIN_DIR/agents/plan-executor/AGENT.md" \

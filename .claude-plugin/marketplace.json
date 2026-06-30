@@ -44,8 +44,8 @@
     {
       "name": "sigil",
       "source": "./sigil-plugin",
-      "description": "Certification authority for Claude Code skills. Multi-perspective review engine spawning expert agents (Engineering, Security, UX, CEO/Strategy, QA) to audit codebases, designs, and skills. Emits structured certificates with evidence markers and SHA-256 digests. The quality gate for AI skills marketplaces.",
-      "version": "0.2.0",
+      "description": "Certification authority for Claude Code skills. Multi-perspective review engine spawning expert agents (Engineering, Security, UX, CEO/Strategy, QA) to audit codebases, designs, and skills. Emits structured certificates with evidence markers and SHA-256 digests. Includes readme-doctor and reddit-research skills. The quality gate for AI skills marketplaces.",
+      "version": "0.3.0",
       "author": {
         "name": "Sigil Project"
       }
@@ -59,14 +59,5 @@
         "name": "Sigil Project"
       }
     },
-    {
-      "name": "sigil-engineering-workflow",
-      "source": "./sigil-engineering-workflow-plugin",
-      "description": "Prompt-driven engineering workflow skills: plan-execute, test-doctor, safe-commit, review-apply, solution-ensemble. Language-aware, security-scanned, smoke-checked.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Sigil Project"
-      }
-    }
   ]
 }
