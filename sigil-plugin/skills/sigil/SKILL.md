@@ -214,3 +214,4 @@ See `agents/` for the full sub-agent definitions. See `docs/certificate.schema.j
 ### Companion Skills (in this plugin)
 - **readme-doctor** (`skills/readme-doctor/SKILL.md`) — 6-step README audit + rewrite pipeline with domain detection. Use for documentation and marketing copy review.
 - **reddit-research** (`skills/reddit-research/SKILL.md`) — Multi-subreddit research engine using Reddit MCP tools. Use for market research, competitor analysis, and sentiment gathering.
+- **stakeholder-360** (`skills/stakeholder-360/SKILL.md`) — Multi-stakeholder assessment engine that maps stakeholders, runs 5-lens Sigil review per group, synthesizes paradigm improvement opportunities, and iterates on low-confidence findings. Use for product strategy and blind spot analysis.

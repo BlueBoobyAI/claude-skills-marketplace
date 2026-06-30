@@ -16,6 +16,7 @@ The quality gate for AI skills marketplaces. Only Sigil-certified skills may lis
 - **90-day validity** — Skills re-certified after version bumps
 - **readme-doctor skill** — 6-step README audit + rewrite pipeline with domain detection
 - **reddit-research skill** — Multi-subreddit research engine using Reddit MCP (never WebFetch)
+- **stakeholder-360 skill** — Multi-stakeholder assessment with 5-lens Sigil review per group, paradigm improvement synthesis, and iteration loop for low-confidence findings
 
 ## Usage
 
