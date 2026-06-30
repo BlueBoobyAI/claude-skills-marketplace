@@ -1,7 +1,7 @@
 ═══ SIGIL ENGINEERING WORKFLOW — BUILD COMPLETE ═══
 
 Plugin: sigil-engineering-workflow v1.0.0
-Status: All self-tests passing (7/7), committed, pushed to GitHub
+Status: All smoke checks passing (7/7), committed, pushed to GitHub
 
 5 skills:
 - plan-execute     — Verified, risk-assessed implementation plans
@@ -19,7 +19,7 @@ Status: All self-tests passing (7/7), committed, pushed to GitHub
 - version          — Display plugin version
 
 3 scripts:
-- self-test.sh     — 7 integrity checks (7/7 passing)
+- smoke-check.sh  — 7 file-structure checks (7/7 passing)
 - detect-secrets.sh — 13 secret patterns
 - version.sh       — Single source of truth enforcement
 

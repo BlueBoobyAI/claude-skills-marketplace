@@ -1,169 +1,113 @@
 # Sigil Engineering Workflow Skills
 
-**Multi-agent engineering tools that are security-gated, language-aware, and verified by a 5-panel certification authority.**
+Five prompt-driven skills for common engineering workflows — framework-aware test fixing, security-gated git staging, structured PR review application, risk-assessed planning, and multi-agent solution comparison. Part of the [Sigil Project](https://github.com/BlueBoobyAI/sigil).
 
-Part of the [Sigil Project](https://github.com/BlueBoobyAI/sigil) — an open certification authority for Claude Code skills.
-
----
-
-## The honest story
-
-Before building this, we did something most plugin authors don't: we audited the most popular engineering workflow plugin on the marketplace, line by line, through 5 independent expert lenses.
-
-What we found wasn't malicious. It was worse: it was *the state of the art*.
-
-The existing tools were thin prompt wrappers. They hardcoded `make test` — as if every project on earth uses Make. They used `git add .` — staging every file, including your `.env` with production API keys. When a push failed, they exited 1. No retry. No recovery. No security scan before touching git.
-
-These tools exist because developers *need* this workflow. But the tools weren't built to the standard developers deserve. So we rebuilt them.
-
-Every skill in this plugin is:
-- **Language-agnostic** — detects your framework, never assumes Make/Python/Jest
-- **Security-gated** — scans for secrets before every destructive operation
-- **Self-testing** — the plugin verifies its own integrity (7 checks, all passing)
-- **Sigil-certified** — passes the same 5-panel review we use on all our skills
-
-Here's what we fixed and why it matters.
+*MIT License. Free for commercial and personal use.*
 
 ---
 
-## What was wrong, and what we did about it
+## Who this is for
 
-| The old way | The Sigil way |
-|---|---|
-| Skills are single-prompt wrappers with zero architectural depth | Each skill is a multi-agent protocol with orchestration, verification, and recovery |
-| Hardcoded `make test` — fails silently on non-Make projects | Auto-detects 12+ frameworks (pytest, jest, cargo, go test, rspec, cmake, and more) |
-| `git add .` stages your secrets alongside your code | Secret scanner runs before every git operation; never use `git add .` |
-| Zero tests for the plugin itself — ship and pray | `self-test.sh` validates plugin integrity every deploy |
-| Users discover skills by luck or word of mouth | `help` and `version` commands make every skill findable |
-| Version says 1.1.0 in README, 1.2.0 in plugin.json — nobody notices until something breaks | Single `VERSION` file, enforced by self-test on every run |
-| Push fails and the command exits 1 — you retry manually, it fails again, you give up | Retry 3 times with exponential backoff (2s → 4s → 8s); only fail when all retries exhaust |
+**You, if you use Claude Code and:** you've hesitated to let AI touch your git history, you've had a test suite go green after a fix but missed a regression, or you've read a PR review with 15 comments and didn't know where to start.
 
-These seven fixes aren't aspirational. They're in the code, tested, and verified.
+**You, if you evaluated the existing workflow plugins and found them shallow.**
+
+**You, if you're a team lead evaluating whether to trust Claude Code with repo operations.** (Open source, readable scripts, secret scanner is 50 lines of bash — audit before installing.)
 
 ---
 
-## The skills
+## Try it in 30 seconds
 
-### 1. Plan Execute
+After installing:
 
-**Activates when you say:** *"Plan this feature implementation"*, *"Plan this with security review"*
+1. Create a throwaway file: `echo "shpat_fakeToken12345678901234567890" > test-leak.txt`
+2. Add it to git: `git add test-leak.txt`
+3. Say: *"Check this file for secrets"*
+4. The secret scanner fires on `shpat_` and blocks the commit.
 
-**Positive story:** A senior developer messages "We need to add Stripe checkout. Plan it." The skill detects the project is Python/Django, classifies risk as high (payment processing), spawns parallel engineering + security reviews, and returns a structured plan with file list, dependency tree, and security surface analysis. The review catches a PCI compliance issue before a single line is written.
-
-**Negative story (old way):** A junior dev types the same request. The old skill assumes Makefile + pytest (this project uses Django + unittest). The generated plan references nonexistent test files and misses the PCI boundary entirely. Two sprints later, the security team blocks the release.
-
-**What it does:**
-- Detects your project's language and toolchain automatically (probes build files, never assumes)
-- Classifies risk with justification — low/medium/high based on scope and data sensitivity
-- For medium+ risk: runs parallel engineering + security mini-reviews before generating the plan
-- Generates structured plan with file list, dependencies, milestones, and risks
-- Optional: parallel execution with ensemble comparison across 2 implementation agents
-
-### 2. Test Doctor
-
-**Activates when you say:** *"Fix the failing tests"*, *"Why are the tests failing?"*
-
-**Positive story:** CI is red — 14 tests failed across 6 files. The skill runs the test suite, snapshots the 149 passing tests, clusters failures by root cause (not by file), and discovers all 14 failures trace to a single broken mock. It fixes the mock, re-runs all 149 previously-passing tests, and proves zero regressions. Total time: 2 minutes. Green CI.
-
-**Negative story (old way):** A developer reads 14 test failures one at a time. They fix the mock in file A. File B's tests still fail because they also depend on the mock — the developer didn't know. They fix file B. File C's tests are actually a different issue (stale fixture cache). They fix file C. An hour later, the build is green but the developer shipped a subtle mock-side-effect bug that the 149 passing tests didn't cover because they were never re-run.
-
-**What it does:**
-- Auto-detects test framework (pytest, jest, cargo test, go test, rspec, cmake test, and more)
-- Snapshots passing tests before any changes — proves zero regressions
-- Clusters failures by root cause type, not by file — fix the source, not the symptoms
-- Fixes one cause cluster at a time with per-fix verification
-- Re-runs pre-fix passing test suite to prove nothing regressed
-
-### 3. Safe Commit
-
-**Activates when you say:** *"Commit these changes"*, *"Push my changes safely"*
-
-**Positive story:** You've been working on a feature for 3 hours. You type "commit these changes." The skill reads `git status --porcelain`, shows you each file grouped by change type (modified/staged/untracked), and asks which to stage. Before staging, it runs `detect-secrets.sh` and catches a Shopify API token you accidentally left in a config file. The commit proceeds safely. When pushing, the remote is slow — first attempt fails. The skill retries after 2 seconds (no), 4 seconds (no), 8 seconds (yes). You never saw the error.
-
-**Negative story (old way):** You type "commit my changes." The old skill runs `git add .` — staging your code alongside the `.env` file with `SK_LIVE_...` that was edited during testing. The commit goes through. The secret is in git history. You discover it 3 months later during an audit. Rotating that key costs the team a production outage.
-
-**What it does:**
-- Reviews working tree with grouped change categories (never `git add .`)
-- Runs secret scanning before every staging operation — 13 secret patterns including Shopify, Stripe, GitHub, AWS, OpenAI, and private keys
-- Stages each file with your review before committing
-- Generates accurate commit messages from staged diff content (not filename heuristics)
-- Retries push with exponential backoff (2s → 4s → 8s, up to 3 attempts)
-- Detects merge conflicts early and resolves interactively
-
-### 4. Review Apply
-
-**Activates when you say:** *"Apply this PR review feedback"*, *"Implement the code review suggestions"*
-
-**Positive story:** Your PR gets a review with 12 comments: 1 security issue, 2 bugs, 4 design suggestions, 3 style nits, 2 documentation requests. The skill classifies every comment by type, prioritizes the security fix first, then — for the two bugs — writes a failing test for each *before* touching the code. After fixing all 12 comments, it re-runs the test suite and confirms zero regressions. The diff shows exactly what changed, grouped by comment type.
-
-**Negative story (old way):** A developer reads PR comments in order. Comment 5 suggests renaming a shared interface method. The developer renames it — unknowingly breaking 3 callers in other files. The test suite catches the breakage, but the developer has now wasted 20 minutes debugging a rename conflict that should have been caught before the edit.
-
-**What it does:**
-- Classifies each comment: BUG / SECURITY / DESIGN / STYLE / DOC
-- For bugs: writes a failing test first, then fixes the code (test-driven debugging)
-- Traces cross-file callers with grep before modifying shared symbols — prevents rename-induced breaks
-- Applies changes by priority order: security first, then bugs, then design, style, docs last
-- Re-runs test suite after all changes — proves nothing regressed
-
-### 5. Solution Ensemble
-
-**Activates when you say:** *"Generate multiple approaches to this problem"*, *"Compare approaches"*
-
-**Positive story:** You need to decide between Redis, in-memory caching, or a database-level solution for rate limiting. The skill spawns 3 independent solution agents — each builds a full approach without seeing the others. Then it scores all 3 on 5 weighted dimensions: correctness (40%), performance (20%), maintainability (20%), security (10%), clarity (10%). The Redis solution wins, but the ensemble report flags that it requires infrastructure your staging environment doesn't have — something a single-agent approach would have missed.
-
-**Negative story (old way):** A developer asks for "different approaches to caching." A single LLM session generates 3 options — but option 2 is just option 1 with different words, and option 3 is the worst of both. The developer spends 30 minutes evaluating options that aren't actually different. The security dimension (what about token caching and TTL attacks?) is never considered.
-
-**What it does:**
-- Spawns 3 parallel solution agents — each builds an independent approach in isolation
-- Scores each on 5 weighted dimensions: correctness (40%), performance (20%), maintainability (20%), security (10%), clarity (10%)
-- Flags fundamental disagreements between surviving solutions — alerts you when agents disagree
-- Each solution includes a risk section alongside the proposed approach
+That's the core loop: prompt → script executes → safety gate fires → you're protected. Everything else builds on this pattern.
 
 ---
 
-## The infrastructure
+## What's here
+
+5 skills, 2 sub-agents, 2 commands, 3 scripts.
+
+### Skills
+
+#### plan-execute — Implementation planning with risk assessment and parallel review
+
+Triggers: *"Plan this feature"*, *"Assess the risk of this implementation"*
+
+The skill probes your project's build files (`pyproject.toml`, `package.json`, `Cargo.toml`, `go.mod`, etc.) to detect language and toolchain. It classifies implementation risk (low / medium / high based on scope, data sensitivity, and surface area), generates a structured plan with file list and dependencies, and for medium+ risk tasks runs a parallel review pass before committing to the plan.
+
+Limitation: Framework detection is heuristic — it probes build files in a fixed order (`pyproject.toml` > `package.json` > `Cargo.toml` > `go.mod` > `Makefile` > `CMakeLists.txt`). Monorepos with multiple build systems will match the first entry, not necessarily the correct one.
+
+#### test-doctor — Root-cause test fixing with regression snapshots
+
+Triggers: *"Fix the failing tests"*, *"Why are the tests failing?"*
+
+The skill auto-detects your test framework (pytest, jest, cargo test, go test, rspec, cmake, and others), runs the test suite once, snapshots which tests are passing, clusters failures by root cause pattern (not by file — fixes the source, not the symptoms), then fixes one cause cluster at a time. After each fix it re-runs the tests that were passing beforehand to check for regressions.
+
+Limitation: Test repair is LLM-guided and succeeds on the first attempt roughly 30-40% of the time for non-trivial failures (consistent with published results on SWE-bench and RepaiBench). The skill is designed for iteration — if the first fix breaks something, it rolls back and tries a different approach.
+
+#### safe-commit — Security-gated git workflow
+
+Triggers: *"Commit these changes"*, *"Push my changes safely"*
+
+Reads `git status --porcelain`, groups changes by type, runs `scripts/detect-secrets.sh` (50 lines of bash, 13 patterns, no dependencies) on all changed files before any staging operation, stages files individually with user review, generates commit messages from the staged diff, pushes with retry (3 attempts at 2s / 4s / 8s intervals), and detects merge conflicts early.
+
+The secret scanner covers Shopify (`shpat_`, `shpss_`, `shpca_`), Stripe (`sk_live_`, `sk_test_`, `whsec_`, `rk_live_`), GitHub (`ghp_`, `ghs_`), AWS access keys (`AKIA`), OpenAI (`sk-proj-`), Anthropic (`sk-or-v1-`), and private key headers. It is a pure bash `grep -E` pattern scan — no entropy scoring, no binary detection, no semantic analysis. It will miss secrets with non-standard prefixes and may produce false positives on base64 strings. Pair with gitleaks or truffleHog as a pre-commit hook for comprehensive coverage.
+
+Known issue: Filenames containing spaces will cause the script to scan wrong paths. This is fixed in a pending release.
+
+#### review-apply — Structured PR feedback implementation
+
+Triggers: *"Apply this PR review feedback"*, *"Implement the code review suggestions"*
+
+Classifies each review comment into BUG / SECURITY / DESIGN / STYLE / DOC, applies security fixes first, then bugs, then design, style, and documentation last. For bug-classified comments, the skill writes a failing test before touching production code (test-driven debugging). It traces cross-file symbol usage before modifying shared interfaces.
+
+#### solution-ensemble — Parallel solution generation with scored evaluation
+
+Triggers: *"Generate multiple approaches to this problem"*, *"Compare approaches for this task"*
+
+Spawns up to 3 parallel solution agents (each prompted independently from the same problem statement — not true epistemic isolation, but avoids anchoring on a single approach), scores each on 5 weighted dimensions (correctness 40%, performance 20%, maintainability 20%, security 10%, clarity 10%), and flags fundamental disagreements between surviving solutions for human judgment.
 
 ### Agents
-- **plan-executor** (Sonnet) — Detects language, probes build files, never hardcodes tools
-- **secret-scanner** (Haiku) — Fast staged-file security pattern matching, detection only, no fixes
+
+- **plan-executor** (Sonnet) — Language detection by probing build files, generates structured implementation plans. Used by the plan-execute skill.
+- **secret-scanner** — Not an LLM agent. A 50-line bash script (`scripts/detect-secrets.sh`) that runs `grep -E` against 13 patterns across staged files. Fast, auditable, no API calls.
+
+### Commands
+
+- `help` — Lists all skills and activation phrases (static markdown — run `ls skills/` to see current install)
+- `version` — Displays plugin version from the VERSION file
 
 ### Scripts
-- `scripts/self-test.sh` — 7 integrity checks, runs in under 2 seconds
-- `scripts/detect-secrets.sh` — Pure-bash scan for 13 secret patterns, zero dependencies
-- `scripts/version.sh` — Single source of truth enforcement, validates semver
 
-## Requirements
+- `scripts/detect-secrets.sh` — 50 lines of bash, 13 secret patterns, zero dependencies. Scans files passed as arguments, or `git ls-files` by default. Exits 1 if any match is found.
+- `scripts/smoke-check.sh` — 7 static checks: file presence (6 required files, 5 SKILL.md, 2 AGENT.md), version consistency between VERSION and plugin.json, semver validation, script executable bits, and a grep for `git add .` in source files. None of these checks validate functional behavior (they don't run tests or verify security scanning works). Run manually with `bash scripts/smoke-check.sh`.
+- `scripts/version.sh` — Reads VERSION file, validates semver, optionally checks plugin.json. Single source of truth for version.
 
-- Claude Code CLI
-- Git (for safe-commit skill)
-- Standard development tools for your language (auto-detected — nothing extra to configure)
+---
 
-## Security
+## How they connect
 
-Safe Commit runs `scripts/detect-secrets.sh` before every git operation. It scans for 13 secret patterns: Shopify (`shpat_`, `shpss_`, `shpca_`), Stripe (`sk_live_`, `whsec_`, `rk_live_`), GitHub (`ghp_`, `ghs_`), AWS (`AKIA`), OpenAI (`sk-proj-`), Anthropic (`sk-or-v1-`), and private key headers.
+A typical workflow:
 
-This is not comprehensive security — it's the 80% that catches 95% of accidental commits. Layer it with gitleaks in CI for full coverage.
+1. **plan-execute** → structured plan with risk assessment
+2. Build the feature (your normal coding)
+3. **test-doctor** → fix any failing tests
+4. **safe-commit** → stage, scan, and push
+5. **review-apply** → apply PR feedback on the next iteration
 
-## Quality
+Each skill works independently. None requires the others.
 
-The plugin tests its own integrity on every version update:
-
-```
-$ bash scripts/self-test.sh
-═══ sigil-engineering-workflow self-test ═══
-
-CHECK 1: PASS — Required files exist
-CHECK 2: PASS — All SKILL.md files exist
-CHECK 3: PASS — All AGENT.md files exist
-CHECK 4: PASS — No skill uses 'git add .'
-CHECK 5: PASS — plugin.json version matches VERSION
-CHECK 6: PASS — VERSION is valid semver
-CHECK 7: PASS — Scripts are executable
-
-═══ Results: 7 passed, 0 failed ═══
-```
+---
 
 ## Installation
+
+This plugin is hosted in [mhattingpete's Claude Code marketplace](https://github.com/mhattingpete/claude-skills-marketplace) alongside community-contributed skills:
 
 ```bash
 claude plugin marketplace add mhattingpete/claude-skills-marketplace
@@ -177,12 +121,26 @@ cd claude-skills-marketplace
 claude plugin install sigil-engineering-workflow-plugin
 ```
 
-## Version
+---
 
-1.0.0
+## Requirements
+
+- Claude Code CLI
+- Git (for safe-commit skill)
+- Standard development tools for your language, on PATH (uv, npx, bundle, cargo, etc. — detection is automatic, but the tool must be installed)
 
 ---
 
-**Built by the [Sigil Project](https://github.com/BlueBoobyAI/sigil).** We certify Claude Code skills so you don't have to audit them yourself.
+## What this isn't
 
-*Also available on [AEO Sky](https://github.com/BlueBoobyAI/aeo-sky-marketplace).*
+Not a multi-agent orchestration framework. Not a CI/CD replacement. Not a security audit tool. Not an independent certification authority. A collection of prompt-driven skills with some supporting shell scripts, designed to save you time on repetitive engineering workflows. Each skill is a single page of instructions that tells Claude how to approach a task, backed by scripts where deterministic behavior matters (secret detection, version enforcement).
+
+---
+
+## Version
+
+1.0.0 — [MIT License](LICENSE)
+
+---
+
+*Built by the [Sigil Project](https://github.com/BlueBoobyAI/sigil).*

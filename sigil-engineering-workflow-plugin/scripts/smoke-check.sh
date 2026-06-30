@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# self-test.sh — Validate plugin integrity with 7 checks
+# smoke-check.sh — Static integrity check for plugin (7 checks)
+# This is a FILE-STRUCTURE validator, not a functional test.
+# It checks file existence, version consistency, and script permissions.
+# It does NOT test any security or behavioral logic.
 # Exit code 0 = all pass
 set -euo pipefail
 
@@ -23,7 +26,7 @@ check() {
 
 check_file() { [ -f "$1" ]; }
 
-echo "═══ sigil-engineering-workflow self-test ═══"
+echo "═══ sigil-engineering-workflow smoke-check ═══"
 echo ""
 
 # CHECK 1: All required files exist
@@ -51,14 +54,14 @@ check 4 "No skill uses 'git add .'" bash -c "
 "
 
 # CHECK 5: plugin.json version matches VERSION
-check 5 "plugin.json version matches VERSION" bash "$PLUGIN_DIR/scripts/version.sh" --plugin-json > /dev/null 2>&1
+check 5 "plugin.json version matches VERSION" bash "$PLUGIN_DIR/scripts/version.sh" --plugin-json
 
 # CHECK 6: VERSION is valid semver
-check 6 "VERSION is valid semver" bash "$PLUGIN_DIR/scripts/version.sh" --check > /dev/null 2>&1
+check 6 "VERSION is valid semver" bash "$PLUGIN_DIR/scripts/version.sh" --check
 
 # CHECK 7: detect-secrets.sh is executable and scripts are executable
 check 7 "Scripts are executable" test -x "$PLUGIN_DIR/scripts/detect-secrets.sh" \
-  -a -x "$PLUGIN_DIR/scripts/self-test.sh" \
+  -a -x "$PLUGIN_DIR/scripts/smoke-check.sh" \
   -a -x "$PLUGIN_DIR/scripts/version.sh"
 
 echo ""
