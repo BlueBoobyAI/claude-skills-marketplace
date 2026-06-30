@@ -1,0 +1,8 @@
+{
+  "name": "sigil-engineering-workflow",
+  "version": "1.0.0",
+  "description": "Sigil-certified engineering workflow skills: plan-execute, test-doctor, safe-commit, review-apply, solution-ensemble. Language-agnostic, security-gated, self-testing. By Sigil Project.",
+  "author": {
+    "name": "Sigil Project"
+  }
+}
