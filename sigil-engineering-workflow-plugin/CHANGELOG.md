@@ -12,3 +12,8 @@
 - Security-gated git workflow (no `git add .`)
 - Test-driven bug fixing
 - 5-dimension solution evaluation including security
+- Market launch strategy doc from 5-lens 360 review
+
+### Changed
+- README rewritten in storytelling style with positive/negative user stories comparing old tools vs Sigil improvements
+- sigil-plugin README now lists certified plugins

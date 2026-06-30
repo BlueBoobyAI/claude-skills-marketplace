@@ -32,6 +32,15 @@ See `docs/certificate.schema.json` for the full JSON Schema. Certificates includ
 - Validity period (90 days default)
 - Optional Ed25519/Sigstore signature for supply-chain integrity
 
+## Sigil-Certified Plugins
+
+These plugins pass the Sigil 5-panel certification process:
+
+| Plugin | What it does |
+|--------|-------------|
+| **[sigil-engineering-workflow](../sigil-engineering-workflow-plugin/README.md)** v1.0.0 | 5 engineering skills: plan-execute, test-doctor, safe-commit, review-apply, solution-ensemble. Security-gated, language-agnostic, self-testing. |
+| **[360-review](../360-review-plugin/)** v1.0.0 | Generates 100 structured user stories (50 positive, 50 negative) across 5 expert lenses with evidence markers. Used internally by Sigil for all certifications. |
+
 ## Also available on AEO Sky
 
 For Sigil-audited skills with free trials, usage caps, and creator payouts:
