@@ -179,3 +179,15 @@ This skill can be called by other skills as a quality gate:
 - **Retro / post-mortem** — Scorecard Audit of shipped work identifies process gaps
 
 Callers pass the target and optionally override lenses (e.g. skip CEO lens for internal tooling reviews). The integration contract is: pass a target, receive a structured scorecard.
+
+### CHORUS Flywheel Integration
+
+**Role in CHORUS flywheel:** Stage 5 (Score) — quality gate for generated surfaces.
+
+This skill evaluates the OUTPUT of `chorus-surface-generator` (Stage 3: Generate) against brand authenticity and merchant-readiness criteria. It replaces the Skeptic review step when deeper scoring is needed.
+
+**CHORUS contract:**
+- **Input:** Surface generation output (concierge, product_finder, smart_compare JSON) + brand_profile for cross-reference
+- **Output:** Structured scorecard with 4-lens scores (Engineering, Security, UX, CEO/Strategy)
+- **Gate:** Score >= 7/10 across all lenses for PASS; below-threshold surfaces trigger regeneration
+- **Schema reference:** Output surfaces are defined in `src/aeo/schemas/brand_profile.py` (Phase 1) — scorecard-auditor validates them against the brand contract

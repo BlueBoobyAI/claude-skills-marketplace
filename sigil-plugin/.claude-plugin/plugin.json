@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "sigil",
-  "version": "0.3.0",
-  "description": "Multi-perspective review engine + certification authority. Spawns parallel expert agents (Engineering, Security, UX, CEO/Strategy, QA) to audit any codebase, design doc, or skill. Emits structured certificates with evidence markers and SHA-256 digests. Includes readme-doctor (README audit + rewrite) and reddit-research (Reddit MCP research).",
+  "version": "0.4.0",
+  "description": "Multi-perspective review engine + certification authority. Includes sigil (general cert), stakeholder-360 (multi-stakeholder assessment), readme-doctor, reddit-research, and sigil-build-loop (recursive build optimization). Patterns library for cross-cert antipattern detection.",
   "author": {
     "name": "Sigil Project"
   },

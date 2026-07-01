@@ -202,3 +202,16 @@ The report is the artifact. Share it, file it next to the skill, and reference i
 - `/adversarial-reviewer` — code-level adversarial review (different scope: single diff review, not brand/content skill calibration)
 - `/stress-test` — broader load/performance stress testing
 - `/skill-tester` — functional test authoring for skills (unit tests, not adversarial calibration)
+
+## Integration Contract
+
+**Role in CHORUS flywheel:** Calibration/Diagnostic (outside the main loop) — stress-tests the pipeline before deployment.
+
+This skill is NOT part of the production flywheel loop. It is a diagnostic tool used during calibration. Per the Parliament's recommendation: "Don't include failure-generator in the loop (it's a calibration tool)."
+
+**Integration rules:**
+- Run failure-generator during bootstrap/calibration before enabling the CHORUS pipeline
+- Do NOT include in the production loop (monitor → brand → generate → challenge → score)
+- Output is a Calibration Dashboard that identifies pipeline failure modes, not a pipeline artifact
+- Pipeline components (brand-profile-decoder, chorus-surface-generator, scorecard-auditor) are the calibration targets
+- BrandProfile schema at `src/aeo/schemas/brand_profile.py` is the reference contract — the failure-generator tests what happens when inputs violate this contract

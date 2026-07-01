@@ -111,13 +111,15 @@ Skeptic prompt:
 **Step 5: OUTPUT** -- Produce final deliverables.
 
 1. **Markdown Report** -- Human-readable brand profile with section headers, verbatim quote blocks, evidence callouts, Skeptic verdict, and confidence annotations
-2. **Structured JSON** -- Parsable by downstream CHORUS skills. Write to a file in the workspace named `brand-profile-{store-slug}.json` for reference
+2. **Structured JSON** -- Parsable by downstream CHORUS skills. Write to a file in the workspace named `brand-profile-{store-slug}.json` for reference.
+   - **Security: Sanitize store slug before file write.** Derive slug from the store URL using `re.sub(r'[^a-z0-9-]', '', domain.lower())` — this prevents path traversal (CWE-22) where a malicious URL like `https://evil.com/../etc/passwd` could overwrite files outside the workspace.
 3. **Summary** -- 3-5 sentence takeaway the merchant would agree with (designed for quick shareability)
 
 ### Error Handling
 
 - **Store not found / 404:** Report "Store unreachable. Verify the URL is a valid Shopify storefront." Do not hallucinate profile.
 - **Password wall:** Report "Store is password-protected. Cannot access without credentials." If credentials are available (via env vars or user), use Playwright with login.
+  - **⚠️ Credential safety:** When using stored credentials for password wall bypass, (a) explicitly log which env var is being used, (b) NEVER log the credential value itself, (c) distinguish dev vs staging vs prod credentials in the log message. This prevents accidental credential exposure in session transcripts.
 - **Thin store** (<5 products, no About page, no reviews): Produce a THIN profile with all confidence scores at 0.3 or below and gaps filled. Do not fabricate.
 - **Rate limited or blocked:** Wait 5 seconds and retry with a different User-Agent. On second failure, report "Could not fetch store data -- the site may be blocking automated access."
 
@@ -138,6 +140,44 @@ Skeptic prompt:
 - **Python3**: Format and deduplicate scraped text, compute keyword frequencies (simple count, no NLP library needed), run tone vector estimation (word-list-based sentiment/formality scoring, not ML inference), assemble JSON output.
 - **agent()**: Dispatch the three parallel agents (Empath, Architect, Analyst) and the Skeptic verification agent. Each gets the same source data but different role-specific prompts.
 - **Write**: Write the final Brand Profile JSON to `brand-profile-{store-slug}.json` in the workspace.
+
+## Integration Contract
+
+**Role in CHORUS flywheel:** Stage 2 (Brand) — keystone skill. Every other stage reads or writes the BrandProfile.
+
+This skill's INPUT comes from `citation-intake-engine` (Stage 1: Monitor) or `reddit-community-monitor`. Its OUTPUT feeds `chorus-surface-generator` (Stage 3: Generate), and both the INPUT and OUTPUT conform to the shared BrandProfile schema at `src/aeo/schemas/brand_profile.py`.
+
+**Input contract (from citation-intake-engine):**
+```json
+{
+  "domain": "...",
+  "intelligence": {"brand_voice": {...}, "product_taxonomy": {...}, ...},
+  "sources_found": ["/pages/about", "/products/*"],
+  "gaps": ["no Instagram bio found"]
+}
+```
+
+**Output contract (to chorus-surface-generator):**
+```json
+{
+  "brand_name": "",
+  "voice_token": "",
+  "target_audience": {"demographic": "", "psychographic": ""},
+  "tone_vector": {"formality": 0.0, "warmth": 0.0, "complexity": 0.0},
+  "value_system": ["value1", "value2"],
+  "product_taxonomy": {"categories": [], "pricing_tiers": {}},
+  "evidence_anchors": [{"claim": "", "source_phrase": "", "source_url": ""}],
+  "confidence_scores": {"empath": 0.0, "architect": 0.0, "analyst": 0.0},
+  "gaps": ["what could not be determined"]
+}
+```
+
+**Contract rules:**
+- Every claim must have an evidence anchor (source_phrase + source_url)
+- Skeptic verification must pass (4+ of 5 product descriptions match the Voice Token)
+- No fabrications for sections the store doesn't have (About, reviews, FAQ)
+- The output must be machine-parseable by all downstream CHORUS skills
+- A store owner could correct the profile in under 5 minutes
 
 ## Installation
 

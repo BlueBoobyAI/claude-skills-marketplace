@@ -38,12 +38,24 @@ Certification authority for Claude Code skills. Assembles a panel of expert agen
 **Free at:** https://github.com/BlueBoobyAI/sigil (OSS, MIT)
 **Premium at:** [our marketplace URL — coming soon]
 
+## Modes
+
+Sigil has two operational modes:
+
+| Mode | Triggers | Output | When to Use |
+|------|----------|--------|-------------|
+| **Certify** (default) | "certify this", "review this", "audit this", "quality gate", "verify" | Structured certificate (`sigil-certificate.json`) with GO/NO-GO verdict | Marketplace listing, deploy gate, compliance check |
+| **Stakeholder** (360) | "360 review", "stakeholder review", "user stories", "blind spots", "what are the gaps" | 100 balanced user stories (50 positive, 50 negative) across 5 lenses, no certificate | Product strategy, early-stage assessment, blind spot analysis |
+
+The mode is auto-detected from the user's request. If ambiguous, default to **Certify**.
+
 ## When to Invoke
 
 - User says "review this code" or "audit this skill"
 - Before publishing any skill to a marketplace
 - Before deploying critical infrastructure changes
 - Evaluating whether to adopt a third-party tool or skill
+- User asks for "360 review", "stakeholder review", "user stories for this" (triggers stakeholder mode)
 
 ## Instructions
 
@@ -85,6 +97,25 @@ Default to **Standard** unless the user specifies otherwise.
 
 Each specialist is spawned as an agent with the same citation discipline and evidence markers as the core panel. Their findings are weighted equally in the synthesis.
 
+### Step 1b — Pattern Library pre-scan (pre-flight)
+
+If the Pattern Library exists at `patterns/registry.jsonl`, run the pre-scan against the target:
+
+```bash
+bash scripts/scan-skill.sh "<target-path>" --silent
+```
+
+Capture the exit code and output:
+- **Exit 0** (no patterns detected) → proceed normally. Note "Pattern Library scan: CLEAN" in the report.
+- **Exit 1** (patterns detected) → this is critical context. The matched patterns ARE findings that must be included in the certificate.
+
+**Inject into agent context:** Append the scan results to every agent's input under a "Pattern Library findings" section. Each matched pattern becomes a pre-loaded, pre-verified finding that agents must:
+1. Confirm (verify the match is real, not a false positive)
+2. Incorporate into their overall assessment
+3. Not waste time re-discovering what the scanner already found
+
+The scan results are loaded once and shared — agents don't re-scan.
+
 ### Step 2 — Spawn parallel expert agents
 
 **Always spawn the 5 core agents** (this is the baseline panel):
@@ -104,6 +135,7 @@ All agents spawn concurrently. Each receives:
 2. Their specific lens instructions
 3. A "be adversarial — find what's wrong, don't rubber-stamp" mandate
 4. The citation discipline rules (✅ ⚠️ ❌ markers)
+5. **Pattern Library scan results** (if any patterns matched the target)
 
 ### Step 3 — Collect and synthesize
 
@@ -211,7 +243,13 @@ Generate a `sigil-certificate.json` file with the full certificate:
 
 See `agents/` for the full sub-agent definitions. See `docs/certificate.schema.json` for the certificate schema.
 
+### Stakeholder mode — 360 user story generation
+
+When triggered in stakeholder mode (user asks for "360 review", "stakeholder review", "blind spots", "user stories"), Sigil adapts its output. Instead of emitting a certificate, it spawns the same 5 core agents but each produces **balanced user stories** (10 positive + 10 negative per lens = 100 total) with evidence markers.
+
+Use stakeholder mode for early discovery — before a build starts, to identify blind spots, or to explore adoption resistance. Certificate mode is for pre-publish verification.
+
 ### Companion Skills (in this plugin)
 - **readme-doctor** (`skills/readme-doctor/SKILL.md`) — 6-step README audit + rewrite pipeline with domain detection. Use for documentation and marketing copy review.
-- **reddit-research** (`skills/reddit-research/SKILL.md`) — Multi-subreddit research engine using Reddit MCP tools. Use for market research, competitor analysis, and sentiment gathering.
-- **stakeholder-360** (`skills/stakeholder-360/SKILL.md`) — Multi-stakeholder assessment engine that maps stakeholders, runs 5-lens Sigil review per group, synthesizes paradigm improvement opportunities, and iterates on low-confidence findings. Use for product strategy and blind spot analysis.
+- **build-optimizer** (`skills/build-optimizer/SKILL.md`) — Recursive build optimizer. Uses Sigil to assess current state, identify the highest-value next thing to build, build it, then re-assess and loop. Terminates when no high-value items remain. Use for build prioritization, sequential feature delivery, and self-driving development loops.
+- **skill-wirer** (`skills/skill-wirer/SKILL.md`) — Auto-discovers, installs, symlinks, and verifies adopted skills across all installed marketplaces. Run at session startup.

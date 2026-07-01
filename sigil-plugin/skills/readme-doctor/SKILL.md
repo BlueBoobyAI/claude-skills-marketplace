@@ -29,6 +29,34 @@ A Sigil-powered content audit pipeline. Reviews any README, documentation page, 
 
 ---
 
+## Phase 0 — Pre-Flight Check (HARD GATE)
+
+Before spawning any expert agents, run the cheapest disconfirming test to avoid wasted context:
+
+\`\`\`bash
+scripts/readme-doctor-preflight.sh <state-file> <target-path>
+\`\`\`
+
+**Exit codes:**
+- **0** (PROCEED) → target valid, enter Phase 1
+- **1** (BLOCKED) → target missing, empty, unreadable, not .md — report reason, stop
+- **10** (WARNING) → target has template placeholders or is very large — warn but proceed
+
+**What it saves:** The 5-agent review pipeline spends ~30s-2min + context budget. Without pre-flight, a missing or empty README wastes all 5 agents' context. These 8 checks run in < 1s total (bash only, no agent calls).
+
+Pre-flight checks performed:
+1. State file not terminated (residual from prior runs)
+2. Target path exists
+3. Target is a regular file (not directory)
+4. Target has .md extension (case-insensitive)
+5. Target is readable by current user
+6. Target is not empty
+7. Target is not abnormally large (>100KB)
+8. Target has minimum meaningful content (>3 lines)
+9. No template placeholders (TODO/FIXME/lorem ipsum)
+
+---
+
 ## When to invoke
 
 - Before publishing any plugin, skill, or project — the README is the first thing users see

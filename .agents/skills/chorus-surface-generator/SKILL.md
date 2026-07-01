@@ -254,6 +254,35 @@ Skeptic verdict format:
 - **30s timeout per generation**: Each `agent()` sub-agent call must complete within 30 seconds. Hung generation = FAIL.
 - **$0.50 budget governor**: Track cumulative token spend across all 3 generators + 3 checkers. If budget exceeded mid-generation, stop all in-flight generations and escalate to human.
 
+**Budget governor — concrete enforcement mechanism:**
+
+Use this Python function as the budget tracker (copy into session context before starting generation):
+
+```python
+import json, os, time
+
+BUDGET_FILE = "/tmp/chorus-budget.json"
+MAX_BUDGET = 0.50  # USD, configurable
+
+def budget_ok(cost_estimate_usd: float = 0.0) -> bool:
+    """Check budget before each agent() call. Returns False if exceeded."""
+    budget = {"spent": 0.0, "max": MAX_BUDGET, "started": time.time()}
+    if os.path.exists(BUDGET_FILE):
+        with open(BUDGET_FILE) as f:
+            budget = json.load(f)
+    budget["spent"] += cost_estimate_usd
+    budget["last_call"] = time.time()
+    with open(BUDGET_FILE, "w") as f:
+        json.dump(budget, f)
+    return budget["spent"] <= budget["max"]
+
+# Pre-flight check — call before each generation:
+# if not budget_ok(0.08):  # ~$0.08 per agent() call estimate
+#     return {"error": "BUDGET_EXCEEDED", "budget": budget}
+```
+
+This creates a durable check file that survives across sequential agent calls and provides a hard stop rather than a prose recommendation.
+
 ## Input Parameters
 
 | Parameter | Required | Type | Default | Description |
@@ -295,6 +324,45 @@ Three possible status values: `ALL_PASS`, `PARTIAL_PASS` (one surface failed), `
 - `agent()` — parallel sub-agent calls for each surface generation and each Skeptic review (up to 6 concurrent sub-agents)
 - `Python3` — JSON validation, budget tracking, timeout enforcement
 - `Read` — reading Brand Profile from file path if provided
+
+## Integration Contract
+
+**Role in CHORUS flywheel:** Stage 3 (Generate) — produces customer-facing surfaces from the BrandProfile.
+
+This skill's INPUT is the BrandProfile JSON from `brand-profile-decoder` (Stage 2: Brand). Its OUTPUT is reviewed by `scorecard-auditor` (Stage 5: Score) using the shared contract schema.
+
+**Input contract (from brand-profile-decoder):**
+```json
+{
+  "brand_name": "...",
+  "voice_profile": {"register": "...", "tone_adjectives": [...], "linguistic_markers": [...]},
+  "customer_personas": [{"name": "...", "needs": "..."}],
+  "product_categories": [{"name": "...", "count": N, "signature": "..."}],
+  "price_range": {"min": N, "max": N, "sweet_spot": "..."},
+  "brand_values": ["..."],
+  "aesthetic_keywords": ["..."],
+  "evidence_anchors": [{"claim": "...", "source_phrase": "...", "source_url": "..."}]
+}
+```
+
+**Output contract (to scorecard-auditor):**
+```json
+{
+  "status": "ALL_PASS|PARTIAL_PASS|ESCALATED",
+  "brand": "...",
+  "surfaces": {"concierge": {...}, "product_finder": {...}, "smart_compare": {...}},
+  "skeptic_verdicts": {...},
+  "budget_used": 0.0,
+  "total_time_seconds": 0.0
+}
+```
+
+**Contract rules:**
+- Input must come from a validated brand-profile-decoder output (Skeptic-verified)
+- The budget governor provides a hard enforcement stop
+- Output surfaces must be Skeptic-verified (score >= 7/10)
+- All product references must be resolvable against the brand's actual catalog
+- Schema conforms to `src/aeo/schemas/brand_profile.py` when it exists
 
 ## Installation
 

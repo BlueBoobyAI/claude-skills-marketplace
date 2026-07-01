@@ -72,6 +72,69 @@
       },
       "additionalProperties": false
     },
+    "verification": {
+      "type": "object",
+      "description": "Deterministic verification manifest. Maps each finding to a machine-executable evidence check that anyone can re-run to reproduce the finding.",
+      "properties": {
+        "manifest_version": {
+          "type": "string",
+          "description": "Version of the verification manifest format.",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "runner": {
+          "type": "string",
+          "description": "CLI command to re-run verification (e.g., 'sigil-verify.sh').",
+          "maxLength": 256
+        },
+        "evidence_checks": {
+          "type": "array",
+          "description": "Machine-executable evidence scripts that reproduce each finding deterministically.",
+          "items": {
+            "type": "object",
+            "required": ["id", "finding_ref", "script_hash", "expected_output_hash"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique ID for this evidence check (e.g., 'finding_001_engineering_secrets')."
+              },
+              "finding_ref": {
+                "type": "integer",
+                "description": "Index into the findings array this check reproduces."
+              },
+              "check_type": {
+                "type": "string",
+                "enum": ["secrets", "digest", "structure", "dependency", "frontmatter", "version", "general"],
+                "description": "Category of evidence check."
+              },
+              "script_hash": {
+                "type": "string",
+                "description": "SHA-256 hash of the evidence check script itself.",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "expected_output_hash": {
+                "type": "string",
+                "description": "SHA-256 hash of the expected deterministic output when run against the certified version.",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "tooling_requirements": {
+          "type": "object",
+          "description": "Pinned tooling versions required for deterministic re-execution.",
+          "properties": {
+            "bash_version": { "type": "string" },
+            "python_version": { "type": "string" },
+            "tools": {
+              "type": "object",
+              "description": "Tool name → version mapping (e.g., { 'pip-audit': '2.7.3' })."
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "findings": {
       "type": "array",
       "description": "All discovered issues across lenses, with evidence markers and severity.",

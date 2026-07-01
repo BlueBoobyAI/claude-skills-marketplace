@@ -149,28 +149,38 @@ Search for specific brand names, product names, and competitor names across foru
 
 Chinese platforms require web-based scraping (no APIs available). Use WebFetch + web_search for these.
 
+**⚠️ Reliability caveat:** Chinese platforms have no official APIs. All results are web-scraped — expect intermittent failures, CAPTCHA blocks, and incomplete data. This is the weakest link in the monitoring chain (expected success rate: ~40-60%). If a platform blocks, note the failure — do not retry.
+
+**Security: Sanitize search keywords.** Before constructing platform URLs, sanitize the keyword:
+```python
+import re, urllib.parse
+keyword = urllib.parse.quote(re.sub(r'[\x00-\x1f\x7f-\x9f​-‏ - ﻿]', '', keyword))
+```
+This strips control characters, zero-width characters, and unicode formatting characters that could be used for injection (preventing CWE-20/CWE-116 bypass).
+
 **Xiaohongshu / RedNote (小红书):**
 - Search for brand name in Chinese and English
 - Focus on: product reviews, unboxing posts, haul posts
 - Note: content is image-heavy -- read surrounding text and comments
-- Platform URL: `https://www.xiaohongshu.com/search_result?keyword={keyword}`
+- Platform URL: `https://www.xiaohongshu.com/search_result?keyword={keyword}` (URL-encode keyword via `urllib.parse.quote`)
 
 **Zhihu (知乎):**
 - Search for brand/topic in question-answer threads
 - Focus on: expert opinions, detailed product comparisons, "how-to" threads
-- Platform URL: `https://www.zhihu.com/search?type=content&q={keyword}`
+- Platform URL: `https://www.zhihu.com/search?type=content&q={keyword}` (URL-encode keyword)
 
 **Douban (豆瓣):**
 - Search for brand/product in group discussions
 - Focus on: community reviews, niche interest groups, long-form discussion threads
-- Platform URL: `https://www.douban.com/search?q={keyword}`
+- Platform URL: `https://www.douban.com/search?q={keyword}` (URL-encode keyword)
 
 **Important notes for Chinese platforms:**
-- Results are web-scraped -- expect incomplete or formatted-as-HTML data
+- Results are web-scraped -- expect incomplete or formatted-as-HTML data  
+- **Expected reliability:** Xiaohongshu ~50-60%, Zhihu ~40-50%, Douban ~20-30% (frequently blocks scrapers)
 - Rate-limit to 1 request per 3 seconds to avoid blocks
-- ALWAYS note in output: "Web-scraped, may be incomplete"
+- ALWAYS output the platform reliability level with each result
 - Translate key findings to English with original Chinese in parentheses
-- If a platform blocks web scraping, note the failure -- do not retry
+- **If a platform blocks web scraping, it MUST be reported in the output** -- a blocked platform is different from "no findings" and must be surfaced as a separate status
 
 ### Phase 5: Global Platform Monitoring
 
@@ -383,6 +393,44 @@ See JSON structure in [Process Phase 6](#phase-6-synthesis-and-reporting).
 | Bash (curl/jq) | HN Algolia API | Fast HN search without HTML scraping |
 
 ---
+
+## Integration Contract
+
+**Role in CHORUS flywheel:** Stage 1 (Monitor) — social listening and brand mention discovery.
+
+This skill's OUTPUT feeds into the brand intelligence pipeline (citation-intake-engine and brand-profile-decoder). Its findings enrich the BrandProfile schema at `src/aeo/schemas/brand_profile.py`.
+
+**Output contract (to brand intelligence pipeline):**
+```json
+{
+  "platform": "reddit|xiaohongshu|zhihu|douban|hn|lobsters",
+  "scan_type": "subreddit_depth|keyword_discovery|brand_mention|trending",
+  "query": "original search term",
+  "security_checks": {"keyword_sanitized": true, "control_chars_removed": true},
+  "results": [
+    {
+      "platform": "...",
+      "title": "...",
+      "url": "...",
+      "score": 0,
+      "relevance_to_brand": "high|medium|low",
+      "key_phrase": "brand-relevant excerpt"
+    }
+  ],
+  "platform_reliability": {
+    "platform_name": "expected success rate note",
+    "blocked": false
+  },
+  "gaps": ["platforms that returned no results"]
+}
+```
+
+**Contract rules:**
+- All search keywords must be sanitized (control characters stripped, URL-encoded)
+- Blocked or rate-limited platforms reported explicitly — not conflated with "no findings"
+- Chinese forum reliability expectations documented per-platform (Xiaohongshu ~50-60%, Zhihu ~40-50%, Douban ~20-30%)
+- Results include relevance scoring for brand pipeline consumption
+- Schema conforms to the shared intelligence format defined alongside BrandProfile
 
 ## Examples
 
